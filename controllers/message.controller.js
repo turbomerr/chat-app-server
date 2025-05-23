@@ -1,4 +1,5 @@
 import { Conversation } from "../models/conversation.model.js";
+import { Message } from "../models/message.model.js";
 
 
 export const sendMessage = async(req, res) => {
@@ -11,10 +12,27 @@ export const sendMessage = async(req, res) => {
         const conversation = await Conversation.findOne({
             participation : { $all : [senderId, receiverId]} // bir array alanının içinde verilen tüm değerlerin bulunup bulunmadığını kontrol eder.
         })
+        //conversation => object
         //first time message
         if(!conversation){
             await Conversation.create({participation : [senderId, receiverId]})
         }
+        //from req.body
+        const newMessage = new Message({
+            senderId,
+            receiverId,
+            message
+        });
+
+        if(newMessage){
+            conversation.messages.push(newMessage._id)
+        }
+        await conversation.save()
+        await newMessage.save()
+
+        res.status(201).json({newMessage})
+
+
     } catch (error) {
         
     }
