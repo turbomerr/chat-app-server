@@ -55,7 +55,7 @@ export const getMessage = async(req, res) => {
         if(!conversation) return res.status(400).json({error : "Conversation not found"});
 
 
-        const messages = conversation.messages;
+        const messages = conversation.messages; // all messages 
         //console.log("Messages : ",messages)
 
         res.status(201).json({messages});

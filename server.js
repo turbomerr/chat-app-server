@@ -9,6 +9,7 @@ import express from "express";
 import {connectMongoDB} from "./db/connectDatabse.js"
 import authRoutes from "./routes/auth.route.js"
 import messageRoutes from "./routes/message.route.js"
+import userRoutes from "./routes/user.route.js"
 
 dotenv.config({path: '../.env'})
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/users", userRoutes)
 
 server.listen(PORT, () => {
     connectMongoDB()
