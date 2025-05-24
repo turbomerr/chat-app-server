@@ -2,6 +2,7 @@ import { Conversation } from "../models/conversation.model.js";
 import { Message } from "../models/message.model.js";
 
 
+
 export const sendMessage = async(req, res) => {
 
     const {message} = req.body; // message that send to receiver
@@ -27,9 +28,7 @@ export const sendMessage = async(req, res) => {
         if(newMessage){
             conversation.messages.push(newMessage._id)
         }
-        // await conversation.save()
-        // await newMessage.save()
-
+        
         // this will run in parallel
 		await Promise.all([conversation.save(), newMessage.save()]);
 
@@ -41,3 +40,29 @@ export const sendMessage = async(req, res) => {
 		res.status(500).json({ error: "Internal server error" });
     }
 } 
+
+export const getMessage = async(req, res) => {
+    const {id : userToChatId} = req.params;
+    const senderId = req.user._id; //senderId come form protect route
+
+    try {
+        const conversation = await Conversation.findOne({
+            participation : { $all : [senderId, userToChatId]}
+        }).populate("messages");// all messages get that between sender and receiver
+        //messages ayri semadaysa conversation messagesle beraber geir
+        //console.log("Conversation : ",conversation)
+
+        if(!conversation) return res.status(400).json({error : "Conversation not found"});
+
+
+        const messages = conversation.messages;
+        //console.log("Messages : ",messages)
+
+        res.status(201).json({messages});
+
+    } catch (error) {
+        console.log("Error in getMessage controller: ", error.message);
+		res.status(500).json({ error: "Internal server error" });
+    }
+
+}
