@@ -28,6 +28,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes)
 
+app.use((err, req, res, next) => {
+    console.log(err);
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({success : false,message : err.message || "Internal server error"})
+     
+})
+
 server.listen(PORT, () => {
     connectMongoDB()
     console.log("Server listening on port", PORT);

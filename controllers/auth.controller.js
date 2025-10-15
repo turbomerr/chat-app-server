@@ -1,23 +1,25 @@
-import { token } from "morgan";
+import { createError } from "../utils/createError.js";
 import { User } from "../models/user.model.js";
 import { generateAndSetCookie } from "../utils/generateToken.js";
 import bcrypt from "bcryptjs";
 
 
-export const loginController = async (req, res) => {
+export const loginController = async (req, res, next) => {
+
+    
     //username password
     const { username, password } = req.body;
 
 
     try {
         if (!username || !password) {
-            return res.status(400).json({ error: "Invalid inputs" })
+            throw createError("Invalid inputs", 400)
         }
 
         const user = await User.findOne({ username });
         const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
         if (!user || !isPasswordCorrect) {
-            return res.status(400).json({ error: "Wrong Password or Username" })
+            throw createError("Password not match", 409)
         }
 
         //generate Token 
@@ -35,26 +37,26 @@ export const loginController = async (req, res) => {
 
     } catch (error) {
         console.log("Login Server Error", error.message)
-        return res.status(500).json({ error: "Internal Server Error" })
+        next(error.statusCode ? error : createError("Internal Server Error", 500));
     }
 
 
 }
 
 
-export const signupController = async (req, res) => {
+export const signupController = async (req, res, next) => {
     //fullName, username, password, confirmPassword, gender 
     const { fullName, username, password, confirmPassword, gender } = req.body;
 
     try {
         if (!fullName || !username || !password | !confirmPassword || !gender) {
-            return res.status(400).json({ error: "Invalid inputs" })
+            throw createError("Invalid inputs", 400)
         }
         if (password !== confirmPassword) {
-            return res.status(400).json({ error: "Password is not match" })
+            throw createError("Password not match", 409)
         }
         const user = await User.findOne({ username });
-        if (user) return res.status(400).json({ error: "User already exists" });
+        if (user) throw createError("User already exist", 400)
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -88,24 +90,24 @@ export const signupController = async (req, res) => {
 
             })
         }else {
-			res.status(400).json({ error: "Invalid user data" });
+			throw createError("Invalid user data",400)
 		}
 
     } catch (error) {
-        console.log("Signup Server Error",error.message)
-        return res.status(500).json({ error: "Internal Server Error" })
+        
+       next(error.statusCode ? error : createError("Internal Server Error", 500));
     }
 
 }
 
-export const logoutController =  async(req, res) => {
+export const logoutController =  async(req, res, next) => {
 
    try {
 		res.cookie("jwt", "", { maxAge: 0 });
 		res.status(200).json({ message: "Logged out successfully" });
 	} catch (error) {
 		console.log("Error in logout controller", error.message);
-		res.status(500).json({ error: "Internal Server Error" });
+		next(error.statusCode ? error : createError("Internal Server Error", 500));
 	}
 
 }

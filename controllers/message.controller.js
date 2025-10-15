@@ -1,9 +1,9 @@
 import { Conversation } from "../models/conversation.model.js";
 import { Message } from "../models/message.model.js";
+import { createError } from "../utils/createError.js";
 
 
-
-export const sendMessage = async(req, res) => {
+export const sendMessage = async(req, res, next) => {
 
     const {message} = req.body; // message that send to receiver
     const {id : receiverId} = req.params; // id that receiver id
@@ -37,11 +37,11 @@ export const sendMessage = async(req, res) => {
 
     } catch (error) {
         console.log("Error in sendMessage controller: ", error.message);
-		res.status(500).json({ error: "Internal server error" });
+		next(error.statusCode ? error : createError("Internal Server Error", 500));
     }
 } 
 
-export const getMessage = async(req, res) => {
+export const getMessage = async(req, res, next) => {
     const {id : userToChatId} = req.params;
     const senderId = req.user._id; //senderId come form protect route
 
@@ -52,8 +52,7 @@ export const getMessage = async(req, res) => {
         //messages ayri semadaysa conversation messagesle beraber geir
         //console.log("Conversation : ",conversation)
 
-        if(!conversation) return res.status(400).json({error : "Conversation not found"});
-
+        if(!conversation) throw createError("Conversation not found", 404)
 
         const messages = conversation.messages; // all messages 
         //console.log("Messages : ",messages)
@@ -62,7 +61,7 @@ export const getMessage = async(req, res) => {
 
     } catch (error) {
         console.log("Error in getMessage controller: ", error.message);
-		res.status(500).json({ error: "Internal server error" });
+		next(error.statusCode ? error : createError("Internal Server Error", 500));
     }
 
 }
